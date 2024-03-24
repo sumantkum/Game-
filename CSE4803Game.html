@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FaceBomp Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #00bfff, #0077b3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: white;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #006bb3;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #005699;
+        }
+
+        #score {
+            font-size: 32px;
+            margin: 20px 0;
+        }
+
+        #timer {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 150px);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .hole {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #005699;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .hole img {
+            width: 55%;
+            height: 55%;
+            object-fit: cover;
+            transition: transform 0.2s ease-in-out;
+            border-radius: 50%;
+            transform: scale(0);
+        }
+
+        .hole.active img {
+            transform: scale(1.1);
+        }
+
+        .hole img.clicked {
+            border: 4px solid red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>😉 FaceBomp</h1>
+
+    <button id="startButton">Start Game</button>
+    <p id="score">Score: 0</p>
+
+    <div id="timer">Time left: <span id="time">30</span> seconds</div>
+    <div id="message"></div>
+
+    <div class="game-board">
+        <div class="hole">
+            <img src="sumantphoto.png.jpeg" alt="Face 1">
+        </div>
+        <div class="hole">
+            <img src="sumantphoto.png.jpeg" alt="Face 2">
+        </div>
+        <div class="hole">
+            <img src="sumantphoto.png.jpeg" alt="Face 3">
+        </div>
+        <div class="hole">
+            <img src="sumantphoto.png.jpeg" alt="Face 4">
+        </div>
+        <div class="hole">
+            <img src="sumantphoto.png.jpeg" alt="Face 5">
+        </div>
+        <div class="hole">
+            <img src="sumantphoto.png.jpeg" alt="Face 6">
+        </div>
+    </div>
+    <audio src="Sound1/bamp.wav" id="bomp-sound"></audio>
+    <audio src="Sound1/you did it 2.wav" id="end-sound"></audio>
+    <audio src="Sound1/coin big.wav" id="high-sound"></audio>
+
+
+
+    <script>
+        // Selecting elements from the HTML
+        const startButton = document.getElementById("startButton");
+        const scoreDisplay = document.getElementById("score");
+        const timeDisplay = document.getElementById("time");
+        const messageDisplay = document.getElementById("message");
+        const holes = document.querySelectorAll(".hole");
+
+        const bompSound = document.getElementById("bomp-sound");
+        const endSound = document.getElementById("end-sound");
+        const highSound = document.getElementById("high-sound");
+
+        let score = 0;
+        let time = 30;
+        let isPlaying = false;
+        let countdown;
+
+        // Function to generate a random time interval
+        function randomTime(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Function to display images in holes
+        function displayImage() {
+            // Clear any active images
+            holes.forEach(hole => hole.classList.remove("active"));
+
+            // Select a random hole
+            const randomHole = holes[Math.floor(Math.random() * holes.length)];
+
+            // Display the image in the selected hole
+            randomHole.classList.add("active");
+
+            // Set a random time for the image to be displayed
+            const time = randomTime(500, 1500);
+
+            // After the set time, hide the image
+            setTimeout(() => {
+                randomHole.classList.remove("active");
+
+                // Continue the game loop if still playing
+                if (isPlaying) {
+                    displayImage();
+                }
+                
+            }, time);
+        }
+
+        // Function to start the game
+        function startGame() {
+            score = 0;
+            time = 30;
+            isPlaying = true;
+            startButton.disabled = true;
+            startButton.textContent = "Playing.....";
+
+            // Display the initial score and time
+            scoreDisplay.textContent = `Score: ${score}`;
+            timeDisplay.textContent = `Time left: ${time} seconds`;
+
+            // Start the countdown timer
+            countdown = setInterval(() => {
+                time--;
+                timeDisplay.textContent = `Time left: ${time} seconds`;
+
+                // End the game when time is up
+                if (time === 0) {
+                    clearInterval(countdown);
+                    isPlaying = false;
+                    startButton.disabled = false;
+                    startButton.textContent = "Tart Game";
+                    timeDisplay.textContent = getMessage();
+                    if (score > 10) {
+                        highSound.play();
+                    }
+                    else {
+                        endSound.play();
+                    }
+
+                }
+            }, 1000);
+
+            // Start displaying images
+            displayImage();
+        }
+
+        // Event listener for the start button
+        startButton.addEventListener("click", startGame);
+
+    
+        // Event listener for clicking on images
+        holes.forEach(hole => {
+            hole.addEventListener("click", () => {
+                if (hole.classList.contains("active")) {
+                    hole.classList.remove("active");
+                    score++;
+                    scoreDisplay.textContent = `Score: ${score}`;
+
+                    // play bomp sound
+                    bompSound.currentTime = 0;
+                    bompSound.play()
+
+                    // Add a red border to the clicked image
+                    const image = hole.querySelector("img");
+                    image.classList.add("clicked");
+
+                    // Remove the red border after a short delay
+                    setTimeout(() => {
+                        image.classList.remove("clicked");
+                    }, 200);
+                }
+            });
+        });
+
+
+        // Function to get a fun message based on the score
+        function getMessage() {
+            if (score === 0) {
+                return "You blinked, didn't you?";
+            } else if (score < 10) {
+                return "Nice effort! Keep practicing!";
+            } else if (score < 20) {
+                return "You're getting good at this!";
+            } else {
+                return "Wow, you're a FaceBomp champion!";
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
